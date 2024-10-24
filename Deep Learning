@@ -1,0 +1,59 @@
+pip install tensorflow
+import numpy as np
+import pandas as pd
+from sklearn.datasets import load_diabetes
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Input, Dense
+from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+data=load_diabetes()
+X=data.data
+y=data.target
+
+scaler=StandardScaler()
+X_scaled=scaler.fit_transform(X)
+df=pd.DataFrame(X_scaled,columns=data.feature_names)
+df['target']=y
+
+sns.pairplot(df,y_vars='target',x_vars=df.columns[:-1])
+plt.show()
+
+plt.figure(figsize=(10,6))
+sns.heatmap(df.corr(),annot=True,cmap='coolwarm')
+plt.show()
+
+M=Sequential()
+M.add(Input(shape=(X_scaled.shape[1],)))
+M.add(Dense(64, activation='relu'))
+M.add(Dense(32, activation='relu'))
+M.add(Dense(1, activation='linear'))
+
+M.compile(optimizer='adam',loss='mean_squared_error')
+X_train,X_test,y_train,y_test=train_test_split(X_scaled,y,test_size=0.2,random_state=42)
+H=M.fit(X_train,y_train,epochs=100,batch_size=32,validation_split=0.1,verbose=0)
+YP=M.predict(X_test)
+mse=mean_squared_error(y_test,YP)
+r2=r2_score(y_test,YP)
+
+print(f'Mean Squared Error: {mse}')
+print(f'R² Score: {r2}')
+
+MI=Sequential()
+MI.add(Input(shape=(X_scaled.shape[1],)))  # Use Input layer instead of input_dim
+MI.add(Dense(128,activation='relu'))
+MI.add(Dense(64,activation='relu'))
+MI.add(Dense(32,activation='relu'))
+MI.add(Dense(1,activation='linear'))
+
+MI.compile(optimizer='adam',loss='mean_squared_error')
+HI=MI.fit(X_train,y_train,epochs=100,batch_size=32,validation_split=0.1,verbose=0)
+
+YPI=MI.predict(X_test)
+MSEI=mean_squared_error(y_test,YPI)
+R2I=r2_score(y_test,YPI)
+
+print(f'Improved Mean Squared Error: {MSEI}')
+print(f'Improved R² Score: {R2I}')
